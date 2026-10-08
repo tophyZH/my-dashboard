@@ -1,3 +1,7 @@
+/// <reference types="vite/client" />
+
+const FUNNEL_URL = 'https://omarchy.tail44a97.ts.net'
+
 import { useState, useEffect } from 'react'
 
 const API_BASE = (import.meta as any).env?.VITE_API_BASE || '/api'
@@ -21,16 +25,16 @@ function App() {
   const [loading, setLoading] = useState('idle')
   const [error, setError] = useState('')
 
-  const callApi = async (path: string, body?: unknown) => {
+  const fetchJson = async (url: string, opts?: RequestInit) => {
     setLoading('loading')
     setError('')
     try {
-      const res = await fetch(`${API_BASE}${path}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
+      const res = await fetch(url, {
+        ...opts,
+        headers: { 'Content-Type': 'application/json', ...(opts?.headers || {}) },
       })
-      const data = await res.json()
+      const text = await res.text()
+      const data = text ? JSON.parse(text) : {}
       if (!res.ok) throw new Error(data.error || 'Unknown error')
       setLoading('done')
       return data
@@ -42,12 +46,12 @@ function App() {
   }
 
   const checkHealth = async () => {
-    const data = await callApi('/health')
+    const data = await fetchJson(`${API_BASE}/health`)
     if (data) setHealth(data)
   }
 
   const checkNextcloud = async () => {
-    const data = await callApi('/proxy', { path: '/status.php', method: 'GET' })
+    const data = await fetchJson(`${FUNNEL_URL}/status.php`)
     if (data) setNcStatus(data)
   }
 
