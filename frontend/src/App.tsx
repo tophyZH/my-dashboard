@@ -157,7 +157,7 @@ export default function App() {
               </text>
             </g>
           )
-        }]}
+        })}
 
         {/* nodes */}
         {nodes.map(node => (
