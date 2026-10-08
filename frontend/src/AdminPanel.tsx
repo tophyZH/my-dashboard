@@ -16,20 +16,15 @@ interface Node {
   pulsePhase: number
 }
 
-interface Edge {
-  source: string
-  target: string
-}
-
 const PLATFORMS = ['twitter', 'douyin', 'bilibili', 'zhihu', 'github', 'nextcloud', 'personal', 'other']
 
 interface AdminPanelProps {
   nodes: Node[]
-  edges: Edge[]
+  edges: { source: string; target: string }[]
   selectedId: string | null
   onSelect: (id: string | null) => void
   onUpdateNodes: (nodes: Node[]) => void
-  onUpdateEdges: (edges: Edge[]) => void
+  onUpdateEdges: (edges: { source: string; target: string }[]) => void
 }
 
 export default function AdminPanel({ nodes, edges, selectedId, onSelect, onUpdateNodes, onUpdateEdges }: AdminPanelProps) {
@@ -55,6 +50,9 @@ export default function AdminPanel({ nodes, edges, selectedId, onSelect, onUpdat
       url: newUrl,
       platform: newPlatform,
       color: colors[nodes.length % colors.length],
+      x: 100 + Math.random() * 600,
+      y: 100 + Math.random() * 400,
+      vx: 0, vy: 0, radius: 16, pulsePhase: Math.random() * Math.PI * 2,
     }
     onUpdateNodes([...nodes, node])
     setNewLabel('')
