@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const API_BASE = import.meta.env.VITE_API_BASE || '/api'
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || '/api'
 
 function App() {
   const [status, setStatus] = useState('idle')
