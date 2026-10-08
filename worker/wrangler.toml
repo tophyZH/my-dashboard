@@ -4,3 +4,7 @@ compatibility_date = "2024-01-01"
 
 [vars]
 UPSTREAM_URL = "https://omarchy.tail44a97.ts.net"
+
+[[kv_namespaces]]
+binding = "GRAPH_KV"
+id = "8fe5234de9594e71b13b93b35184e575"
