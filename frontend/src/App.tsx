@@ -16,6 +16,7 @@ interface Node {
   vy: number
   radius: number
   pulsePhase: number
+  community: number
 }
 
 interface Edge {
@@ -23,29 +24,98 @@ interface Edge {
   target: string
 }
 
-const COLORS = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16']
+const PLATFORM_COLORS: Record<string, string> = {
+  github: '#ffffff', twitter: '#1DA1F2', douyin: '#ff0050',
+  bilibili: '#FB7299', zhihu: '#0084FF', nextcloud: '#0082C9', personal: '#3B82F6', other: '#64748B',
+}
+
+function buildGraphFromGitHub(following: any[], followers: any[]): { nodes: Node[]; edges: Edge[] } {
+  const nodes: Node[] = []
+  const edges: Edge[] = []
+  const nodeMap = new Map<string, string>()
+
+  // Add self node
+  nodes.push({
+    id: 'self', label: 'tophyZH', url: 'https://github.com/tophyZH',
+    platform: 'github', color: PLATFORM_COLORS.github,
+    x: 0, y: 0, vx: 0, vy: 0, radius: 28, pulsePhase: 0, community: 0,
+  })
+  nodeMap.set('tophyZH', 'self')
+
+  // Add following nodes
+  following.forEach((f, i) => {
+    const id = `f_${f.id}`
+    nodes.push({
+      id, label: f.login, url: f.html_url,
+      platform: 'github', color: PLATFORM_COLORS.github,
+      x: 0, y: 0, vx: 0, vy: 0, radius: 12, pulsePhase: Math.random() * Math.PI * 2, community: 1,
+    })
+    nodeMap.set(f.login, id)
+    // Connect to self
+    edges.push({ source: 'self', target: id })
+  })
+
+  // Add followers
+  followers.forEach((f, i) => {
+    const id = `fl_${f.id}`
+    if (nodeMap.has(f.login)) return // already exists (mutual follow)
+    nodes.push({
+      id, label: f.login, url: f.html_url,
+      platform: 'github', color: '#64748B',
+      x: 0, y: 0, vx: 0, vy: 0, radius: 10, pulsePhase: Math.random() * Math.PI * 2, community: 2,
+    })
+    nodeMap.set(f.login, id)
+    edges.push({ source: id, target: 'self' })
+  })
+
+  // Auto-connect mutual follows (both following each other)
+  const followingSet = new Set(following.map(f => f.login))
+  followers.forEach(f => {
+    if (followingSet.has(f.login)) {
+      // Mutual follow - connect the two nodes
+      const fid = nodeMap.get(f.login)
+      if (fid) edges.push({ source: 'self', target: fid })
+    }
+  })
+
+  return { nodes, edges }
+}
 
 export default function App() {
   const [page, setPage] = useState<'graph' | 'admin'>('graph')
-  const [nodes, setNodes] = useState<Node[]>([
-    { id: 'n1', label: '首页', url: '', platform: 'personal', color: COLORS[0], x: 0, y: 0, vx: 0, vy: 0, radius: 28, pulsePhase: 0 },
-    { id: 'n2', label: 'Nextcloud', url: '', platform: 'nextcloud', color: COLORS[1], x: 0, y: 0, vx: 0, vy: 0, radius: 20, pulsePhase: 0.5 },
-    { id: 'n3', label: 'Twitter/X', url: '', platform: 'twitter', color: COLORS[2], x: 0, y: 0, vx: 0, vy: 0, radius: 20, pulsePhase: 1 },
-    { id: 'n4', label: '抖音', url: '', platform: 'douyin', color: COLORS[3], x: 0, y: 0, vx: 0, vy: 0, radius: 16, pulsePhase: 1.5 },
-    { id: 'n5', label: 'GitHub', url: '', platform: 'github', color: COLORS[4], x: 0, y: 0, vx: 0, vy: 0, radius: 16, pulsePhase: 2 },
-    { id: 'n6', label: 'Bilibili', url: '', platform: 'bilibili', color: COLORS[5], x: 0, y: 0, vx: 0, vy: 0, radius: 16, pulsePhase: 2.5 },
-    { id: 'n7', label: '知乎', url: '', platform: 'zhihu', color: COLORS[6], x: 0, y: 0, vx: 0, vy: 0, radius: 16, pulsePhase: 3 },
-  ])
-  const [edges, setEdges] = useState<Edge[]>([
+  const [loading, setLoading] = useState(true)
+  const [githubData, setGithubData] = useState<{ nodes: Node[]; edges: Edge[] } | null>(null)
+
+  useEffect(() => {
+    // Load GitHub data
+    Promise.all([
+      fetch('/api/following/tophyZH').then(r => r.json().catch(() => [])),
+      fetch('/api/followers/tophyZH').then(r => r.json().catch(() => [])),
+    ]).then(([following, followers]) => {
+      if (following.length > 0 || followers.length > 0) {
+        const graph = buildGraphFromGitHub(following, followers)
+        setGithubData(graph)
+      }
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
+
+  const defaultNodes: Node[] = [
+    { id: 'n1', label: 'tophyZH', url: '', platform: 'github', color: PLATFORM_COLORS.github, x: 0, y: 0, vx: 0, vy: 0, radius: 28, pulsePhase: 0, community: 0 },
+    { id: 'n2', label: 'Nextcloud', url: '', platform: 'nextcloud', color: PLATFORM_COLORS.nextcloud, x: 0, y: 0, vx: 0, vy: 0, radius: 20, pulsePhase: 0.5, community: 0 },
+    { id: 'n3', label: 'Twitter/X', url: '', platform: 'twitter', color: PLATFORM_COLORS.twitter, x: 0, y: 0, vx: 0, vy: 0, radius: 20, pulsePhase: 1, community: 0 },
+    { id: 'n4', label: '抖音', url: '', platform: 'douyin', color: PLATFORM_COLORS.douyin, x: 0, y: 0, vx: 0, vy: 0, radius: 16, pulsePhase: 1.5, community: 0 },
+    { id: 'n5', label: 'GitHub', url: '', platform: 'github', color: PLATFORM_COLORS.github, x: 0, y: 0, vx: 0, vy: 0, radius: 16, pulsePhase: 2, community: 0 },
+  ]
+  const defaultEdges: Edge[] = [
     { source: 'n1', target: 'n2' },
     { source: 'n1', target: 'n3' },
     { source: 'n1', target: 'n4' },
     { source: 'n1', target: 'n5' },
-    { source: 'n1', target: 'n6' },
-    { source: 'n1', target: 'n7' },
-    { source: 'n3', target: 'n5' },
-    { source: 'n5', target: 'n1' },
-  ])
+  ]
+
+  const [nodes, setNodes] = useState<Node[]>(defaultNodes)
+  const [edges, setEdges] = useState<Edge[]>(defaultEdges)
   const [selectedId, setSelectedId] = useState<string | null>('n1')
   const [size, setSize] = useState({ w: 900, h: 600 })
 
@@ -55,6 +125,15 @@ export default function App() {
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
   }, [])
+
+  // Load GitHub data when available
+  useEffect(() => {
+    if (githubData) {
+      setNodes(githubData.nodes)
+      setEdges(githubData.edges)
+      setSelectedId('self')
+    }
+  }, [githubData])
 
   const handleMove = useCallback((id: string, x: number, y: number) => {
     setNodes(prev => prev.map(n => n.id === id ? { ...n, x, y } : n))
@@ -86,8 +165,8 @@ export default function App() {
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', background: '#0f172a' }}>
       <GraphCanvas
-        nodes={nodes}
-        edges={edges}
+        nodes={loading && !githubData ? defaultNodes : nodes}
+        edges={loading && !githubData ? defaultEdges : edges}
         selectedId={selectedId}
         onSelect={setSelectedId}
         onMove={handleMove}
@@ -100,6 +179,18 @@ export default function App() {
           <button onClick={() => navigate('graph')} style={tabBtn}>🌌 图谱</button>
         </div>
         <p style={{ color: '#64748b', fontSize: 12, margin: '0 0 12px' }}>滚轮缩放 | 中键拖拽平移 | 点击节点聚焦</p>
+        {loading && <p style={{ color: '#64748b', fontSize: 12 }}>加载 GitHub 数据...</p>}
+        {githubData && (
+          <div style={{ background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: 12, color: '#94a3b8' }}>🐦 GitHub 数据</h3>
+            <p style={{ color: '#64748b', fontSize: 11, margin: 0 }}>
+              关注: {githubData.nodes.filter(n => n.id.startsWith('f_')).length} 人<br />
+              粉丝: {githubData.nodes.filter(n => n.id.startsWith('fl_')).length} 人<br />
+              节点: {githubData.nodes.length} 个<br />
+              连线: {githubData.edges.length} 条
+            </p>
+          </div>
+        )}
         <div style={{ background: '#1e293b', borderRadius: 8, padding: 12 }}>
           <h3 style={{ margin: '0 0 8px', fontSize: 12, color: '#94a3b8' }}>📋 节点列表</h3>
           {nodes.map(n => (
