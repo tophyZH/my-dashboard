@@ -409,14 +409,14 @@ export default function GraphCanvas({ nodes, edges, selectedId, onSelect, onMove
         // Node circle
         ctx.beginPath()
         ctx.arc(node.x, node.y, drawR, 0, Math.PI * 2)
-        ctx.fillStyle = color + (isDim ? '30' : '60')
+        ctx.fillStyle = color + ((hovId && !isSel && !isHov && !isNeighbor) ? '30' : '60')
         ctx.fill()
         ctx.strokeStyle = color
         ctx.lineWidth = (isSel ? 3 : isHov ? 2.5 : 2) / currentZoom
         ctx.stroke()
 
         // Label
-        ctx.fillStyle = isDim ? '#475569' : '#e2e8f0'
+        ctx.fillStyle = (hovId && !isSel && !isHov && !isNeighbor) ? '#475569' : '#e2e8f0'
         ctx.font = `${(isSel ? 14 : 12) / currentZoom}px system-ui`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
