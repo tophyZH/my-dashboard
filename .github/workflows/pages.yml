@@ -18,20 +18,3 @@ jobs:
       - run: wrangler pages deploy dist --project-name=dashboard
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
----
-name: Deploy Worker
-on:
-  push:
-    branches: [main]
-    paths:
-      - 'worker/**'
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          workingDirectory: ./worker
