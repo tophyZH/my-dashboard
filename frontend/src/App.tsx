@@ -1,5 +1,7 @@
 /// <reference types="vite/client" />
 
+const FUNNEL_URL = 'https://omarchy.tail44a97.ts.net'
+
 import { useState, useEffect } from 'react'
 
 const API_BASE = (import.meta as any).env?.VITE_API_BASE || '/api'
@@ -49,7 +51,7 @@ function App() {
   }
 
   const checkNextcloud = async () => {
-    const data = await fetchJson(`/api/status?path=/status.php`)
+    const data = await fetchJson(`${FUNNEL_URL}/status.php`)
     if (data) setNcStatus(data)
   }
 
