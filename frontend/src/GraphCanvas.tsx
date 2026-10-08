@@ -203,7 +203,7 @@ export default function GraphCanvas({ nodes, edges, selectedId, onSelect, onMove
       }
     })
     hoverRef.current = found
-    canvasRef.current.style.cursor = found ? 'pointer' : 'default'
+    if (canvasRef.current) canvasRef.current.style.cursor = found ? 'pointer' : 'default'
   }
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {

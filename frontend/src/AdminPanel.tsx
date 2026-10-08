@@ -8,7 +8,12 @@ interface Node {
   url: string
   platform: string
   color: string
-  parentId?: string
+  x: number
+  y: number
+  vx: number
+  vy: number
+  radius: number
+  pulsePhase: number
 }
 
 interface Edge {
