@@ -12,7 +12,7 @@ jobs:
           node-version: 22
       - working-directory: ./frontend
         run: |
-          npm ci
+          npm install
           npm run build
       - run: npm install -g wrangler
       - run: wrangler pages deploy dist --project-name=dashboard
