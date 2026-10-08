@@ -16,11 +16,7 @@ interface Node {
   pulsePhase: number
 }
 
-interface Edge {
-  source: string
-  target: string
-  weight: number
-}
+type Edge = { source: string; target: string }
 
 const PLATFORM_COLORS: Record<string, string> = {
   twitter: '#1DA1F2',
